@@ -8,8 +8,11 @@ import Dashboard from './components/Dashboard';
 import Calendar from './components/Calendar';
 import TodoList from './components/TodoList';
 import ProgressTracker from './components/ProgressTracker';
-import StudyTools from './components/StudyTools'; // Import the new StudyTools component
+import StudyTools from './components/StudyTools';
+import Collaboration from './components/Collaboration';
 import LandingPage from './components/LandingPage';
+import Profile from './components/Profile';
+import SettingsPage from './components/SettingsPage'; // Added SettingsPage import
 import { TaskProvider } from './components/TaskContext';
 import './App.css';
 
@@ -55,6 +58,9 @@ function App() {
             <Route path="/todo" element={<TodoList theme={theme} />} />
             <Route path="/progress" element={<ProgressTracker theme={theme} />} />
             <Route path="/study" element={<StudyTools theme={theme} />} />
+            <Route path="/collaboration" element={<Collaboration theme={theme} />} />
+            <Route path="/profile" element={<Profile theme={theme} />} />
+            <Route path="/settings" element={<SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />} /> {/* Added Settings route */}
             <Route path="/" element={<LandingPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
           </Routes>
         </Router>
