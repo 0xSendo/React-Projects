@@ -29,6 +29,7 @@ import {
   Tooltip,
   LinearProgress,
   CircularProgress,
+  Modal,
 } from '@mui/material';
 import { ThemeProvider, styled, createTheme } from '@mui/material/styles';
 import {
@@ -99,6 +100,7 @@ const theme = createTheme({
     '0px 3px 3px -2px rgba(0,0,0,0.1),0px 3px 4px 0px rgba(0,0,0,0.07),0px 1px 8px 0px rgba(0,0,0,0.06)',
     '0px 2px 4px -1px rgba(0,0,0,0.1),0px 4px 5px 0px rgba(0,0,0,0.07),0px 1px 10px 0px rgba(0,0,0,0.06)',
     '0px 3px 5px -1px rgba(0,0,0,0.1),0px 5px 8px 0px rgba(0,0,0,0.07),0px 1px 14px 0px rgba(0,0,0,0.06)',
+    '0px 3px 5px -1px rgba(0,0,0,0.1),0px 6px 10px 0px rgba(0,0,0,0.07),0px 1px 18px 0px rgba(0,0,0,0.06)',
     '0px 3px 5px -1px rgba(0,0,0,0.1),0px 6px 10px 0px rgba(0,0,0,0.07),0px 1px 18px 0px rgba(0,0,0,0.06)',
   ],
   transitions: {
@@ -172,11 +174,25 @@ const MainContent = styled(Box)(({ theme }) => ({
   width: '100%',
 }));
 
-const Dashboard = () => {
+const NotificationModal = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  backgroundColor: theme.palette.background.paper,
+  boxShadow: theme.shadows[5],
+  padding: theme.spacing(4),
+  borderRadius: theme.shape.borderRadius,
+  outline: 'none',
+}));
+
+const Dashboard = ({ darkMode, setDarkMode }) => {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [openNotification, setOpenNotification] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [newTask, setNewTask] = useState('');
   const [tasks, setTasks] = useState([
@@ -212,6 +228,12 @@ const Dashboard = () => {
   // Progress Overview State
   const [progressOverview, setProgressOverview] = useState({ totalTasks: 10, completedTasks: 6, completionRate: 60 });
 
+  // Notification State
+  const notifications = [
+    { id: 1, text: 'Math Assignment Due', time: 'Tomorrow, 11:59 PM' },
+    { id: 2, text: 'Study Group Reminder', time: 'Today, 3:00 PM' },
+  ];
+
   useEffect(() => {
     setDrawerOpen(!isMobile);
   }, [isMobile]);
@@ -237,6 +259,24 @@ const Dashboard = () => {
   const toggleDrawer = () => setDrawerOpen(!drawerOpen);
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
+  const handleOpenNotification = () => setOpenNotification(true);
+  const handleCloseNotification = () => setOpenNotification(false);
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+    handleMenuClose();
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
+    handleMenuClose();
+  };
+
+  const handleLogoutClick = () => {
+    navigate('/login');
+    handleMenuClose();
+  };
+
   const handleAddTask = () => {
     if (newTask.trim()) {
       const newTaskObj = { id: Date.now(), text: newTask, priority: 'Medium', due: 'Today' };
@@ -250,6 +290,7 @@ const Dashboard = () => {
       }));
     }
   };
+
   const togglePomodoro = () => {
     if (isPomodoroRunning) {
       setIsPomodoroRunning(false);
@@ -259,6 +300,7 @@ const Dashboard = () => {
       setRecentActivities([{ id: Date.now(), action: 'Started Pomodoro session', timestamp: 'Just now' }, ...recentActivities]);
     }
   };
+
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -274,10 +316,7 @@ const Dashboard = () => {
     { text: 'Collaboration', icon: <GroupIcon />, link: '/collaboration' },
   ];
 
-  const secondaryMenuItems = [
-    { text: 'Notifications', icon: <NotificationsIcon />, link: '/notifications' },
-    { text: 'Settings', icon: <SettingsIcon />, link: '/settings' },
-  ];
+  const secondaryMenuItems = []; // Removed "Settings" and "Notifications"
 
   const stats = [
     { title: 'Total Events', value: '12', icon: <TodayIcon fontSize="large" /> },
@@ -322,7 +361,7 @@ const Dashboard = () => {
             <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
               Study Planner
             </Typography>
-            <IconButton color="inherit">
+            <IconButton color="inherit" onClick={handleOpenNotification}>
               <Badge badgeContent={4} color="error">
                 <NotificationsIcon />
               </Badge>
@@ -331,11 +370,44 @@ const Dashboard = () => {
               <AccountCircleIcon />
             </IconButton>
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} TransitionComponent={Fade}>
-              <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-              <MenuItem onClick={() => { handleMenuClose(); navigate('/login'); }}>Logout</MenuItem>
+              <MenuItem onClick={handleProfileClick}>Profile</MenuItem>
+              <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
+              <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
             </Menu>
           </Toolbar>
         </AppBar>
+
+        {/* Notification Modal */}
+        <Modal open={openNotification} onClose={handleCloseNotification}>
+          <NotificationModal>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}>
+              Notifications
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <List dense>
+              {notifications.map((notification) => (
+                <ListItem key={notification.id}>
+                  <ListItemText
+                    primary={notification.text}
+                    secondary={notification.time}
+                    primaryTypographyProps={{ color: 'text.primary' }}
+                    secondaryTypographyProps={{ color: 'text.secondary' }}
+                  />
+                  <Tooltip title="Snooze for 1 hour">
+                    <IconButton edge="end" size="small">
+                      <SnoozeIcon />
+                    </IconButton>
+                  </Tooltip>
+                </ListItem>
+              ))}
+            </List>
+            <Box sx={{ mt: 2, textAlign: 'right' }}>
+              <Button onClick={handleCloseNotification} variant="outlined">
+                Close
+              </Button>
+            </Box>
+          </NotificationModal>
+        </Modal>
 
         {/* Sidebar Drawer */}
         <Drawer
